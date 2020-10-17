@@ -23,6 +23,15 @@ async function startFarming(debugMode = false) {
         debugMode && console.log('Launched')
         const page = await browser.newPage()
         await page.goto('https://adbtc.top/index/enter')
+
+        const captchaSelector = '.select-dropdown.dropdown-trigger'
+        await page.waitForSelector(captchaSelector)
+        await page.click(captchaSelector)
+
+        const reCaptchaSelector = 'li[tabindex="0"]:nth-of-type(2)'
+        await page.waitForSelector(reCaptchaSelector)
+        await page.click(reCaptchaSelector)
+
         //browser.close()
     })
 }
