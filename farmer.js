@@ -7,6 +7,8 @@
 
 /** @type {Ids} ids */
 const ids = require('./ids.json')
+const timeout = require('@pierreminiggio/timeout')
+
 const puppeteer = require('puppeteer-extra')
 const stealthPlugin = require('puppeteer-extra-plugin-stealth')
 const recaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
@@ -73,8 +75,52 @@ async function startFarming(debugMode = false) {
         await page.waitForSelector(submitButton)
         await page.click(submitButton)
 
-        debugMode && console.log('Logged in !')
-        //browser.close()
+        debugMode && console.log('Logged in ! Going to ads watching page...')
+        const adWatcherMenuItemSelector = '.collection.menu:nth-of-type(3)>a:nth-of-type(3)'
+        await page.waitForSelector(adWatcherMenuItemSelector)
+        await page.click(adWatcherMenuItemSelector)
+
+        debugMode && console.log('Went ! Waiting for captcha...')
+        const reCaptchaIFrameSelector2 = reCaptchaIFrameSelector
+        await page.waitForSelector(reCaptchaIFrameSelector2)
+
+        debugMode && console.log('Waited ! Solving ReCaptcha...')
+        await page.solveRecaptchas()
+
+        debugMode && console.log('Solved ! Start watching ads...')
+
+        await watchAds(browser, page, debugMode)
+
+        browser.close()
+        
+        resolve()
+    })
+}
+
+/**
+ * @param {import('puppeteer').Browser} browser 
+ * @param {import('puppeteer').Page} page 
+ * @param {boolean} debugMode
+ */
+async function watchAds(browser, page, debugMode) {
+    return new Promise(async (resolve) => {
+        let running = true
+        while (running) {
+            debugMode && console.log('Clicking start...')
+            const startButtonSelector = '.pulse.animated'
+            await page.waitForSelector(startButtonSelector)
+            await page.click(startButtonSelector)
+            debugMode && console.log('Clicked ! Watching ad...')
+            await timeout(30000)
+            const pages = await browser.pages()
+            for (let i = 0; i < pages.length; i += 1) {
+                if (! await pages[i].title() === 'Get Bitcoin for viewing websites') {
+                    await pages[i].close()
+                }
+            }
+            debugMode && console.log('Watched !')
+        }
+        resolve()
     })
 }
 
