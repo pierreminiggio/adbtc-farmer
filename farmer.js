@@ -31,6 +31,7 @@ puppeteer.use(
 async function startFarming(debugMode = false) {
     return new Promise(async (resolve) => {
         debugMode && console.log('Launch !')
+        /** @type {import('puppeteer').Browser} browser */
         const browser = await puppeteer.launch({
             headless: false,
             args: [
@@ -39,63 +40,70 @@ async function startFarming(debugMode = false) {
             ]
         })
         
-        ! debugMode && args.push('--window-position=0,-800')
-        debugMode && console.log('Launched')
-        const page = await browser.newPage()
-        await page.goto('https://adbtc.top/index/enter')
+        try {
+            ! debugMode && args.push('--window-position=0,-800')
+            debugMode && console.log('Launched')
+            const page = await browser.newPage()
+            await page.goto('https://adbtc.top/index/enter')
 
-        debugMode && console.log('Selecting ReCaptcha...')
-        const captchaSelector = '.select-dropdown.dropdown-trigger'
-        await page.waitForSelector(captchaSelector)
-        await page.click(captchaSelector)
+            debugMode && console.log('Selecting ReCaptcha...')
+            const captchaSelector = '.select-dropdown.dropdown-trigger'
+            await page.waitForSelector(captchaSelector)
+            await page.click(captchaSelector)
 
-        const reCaptchaSelector = 'li[tabindex="0"]:nth-of-type(2)'
-        await page.waitForSelector(reCaptchaSelector)
-        await page.click(reCaptchaSelector)
+            const reCaptchaSelector = 'li[tabindex="0"]:nth-of-type(2)'
+            await page.waitForSelector(reCaptchaSelector)
+            await page.click(reCaptchaSelector)
 
-        debugMode && console.log('Selected ! Entering username and password...')
-        const usernameInputSelector = '#pochka'
-        await page.waitForSelector(usernameInputSelector)
-        const passwordInputSelector = '#paszwort'
-        await page.waitForSelector(passwordInputSelector)
-        await page.evaluate((usernameInputSelector, passwordInputSelector, login, password) => {
-            document.querySelector(usernameInputSelector).value = login
-            document.querySelector(passwordInputSelector).value = password
-        }, usernameInputSelector, passwordInputSelector, ids.login, ids.password)
+            debugMode && console.log('Selected ! Entering username and password...')
+            const usernameInputSelector = '#pochka'
+            await page.waitForSelector(usernameInputSelector)
+            const passwordInputSelector = '#paszwort'
+            await page.waitForSelector(passwordInputSelector)
+            await page.evaluate((usernameInputSelector, passwordInputSelector, login, password) => {
+                document.querySelector(usernameInputSelector).value = login
+                document.querySelector(passwordInputSelector).value = password
+            }, usernameInputSelector, passwordInputSelector, ids.login, ids.password)
 
-        debugMode && console.log('Entered ! Waiting for ReCaptcha...')
-        const reCaptchaIFrameSelector = 'iframe'
-        await page.waitForSelector(reCaptchaIFrameSelector)
+            debugMode && console.log('Entered ! Waiting for ReCaptcha...')
+            const reCaptchaIFrameSelector = 'iframe'
+            await page.waitForSelector(reCaptchaIFrameSelector)
 
-        debugMode && console.log('Waited ! Solving ReCaptcha...')
-        await page.solveRecaptchas()
-        debugMode && console.log('Solved ! Loging in...')
+            debugMode && console.log('Waited ! Solving ReCaptcha...')
+            await page.solveRecaptchas()
+            debugMode && console.log('Solved ! Loging in...')
 
-        const submitButton = 'input[type="submit"]'
-        await page.waitForSelector(submitButton)
-        await page.click(submitButton)
+            const submitButton = 'input[type="submit"]'
+            await page.waitForSelector(submitButton)
+            await page.click(submitButton)
 
-        debugMode && console.log('Logged in ! Going to ads watching page...')
-        const adWatcherMenuItemSelector = '.collection.menu:nth-of-type(3)>a:nth-of-type(3)'
-        await page.waitForSelector(adWatcherMenuItemSelector)
-        await page.click(adWatcherMenuItemSelector)
+            debugMode && console.log('Logged in ! Going to ads watching page...')
+            const adWatcherMenuItemSelector = '.collection.menu:nth-of-type(3)>a:nth-of-type(3)'
+            await page.waitForSelector(adWatcherMenuItemSelector)
+            await page.click(adWatcherMenuItemSelector)
 
-        debugMode && console.log('Went ! Waiting for captcha...')
-        const reCaptchaIFrameSelector2 = reCaptchaIFrameSelector
-        await page.waitForSelector(reCaptchaIFrameSelector2)
+            debugMode && console.log('Went ! Waiting for captcha...')
+            const reCaptchaIFrameSelector2 = reCaptchaIFrameSelector
+            await page.waitForSelector(reCaptchaIFrameSelector2)
 
-        debugMode && console.log('Waited ! Solving ReCaptcha...')
-        await page.solveRecaptchas()
+            debugMode && console.log('Waited ! Solving ReCaptcha...')
+            await page.solveRecaptchas()
 
-        debugMode && console.log('Solved ! Start watching ads...')
+            debugMode && console.log('Solved ! Start watching ads...')
 
-        await timeout(3000)
+            await timeout(3000)
 
-        await watchAds(browser, page, debugMode)
+            await watchAds(browser, page, debugMode)
 
-        browser.close()
+            await browser.close()
+            resolve()
 
-        resolve()
+        } catch (error) {
+            console.log(error)
+            await browser.close()
+            await startFarming(debugMode)
+            resolve()
+        }
     })
 }
 
@@ -105,43 +113,47 @@ async function startFarming(debugMode = false) {
  * @param {boolean} debugMode
  */
 async function watchAds(browser, page, debugMode) {
-    return new Promise(async (resolve) => {
-        let running = true
-        let mainPage = page
-        let pages
-        let pageTitle
-        let explodedTitle
-        let timeoutTime = 60
-        const startButtonSelector = '.pulse.animated'
-        while (running) {
-            debugMode && console.log('Clicking start...')
-            await mainPage.waitForSelector(startButtonSelector)
-            await mainPage.click(startButtonSelector)
-            debugMode && console.log('Clicked ! Watching ad...')
-            await timeout(3000)
-            pages = await browser.pages()
-            for (let i = 0; i < pages.length; i += 1) {
-                pageTitle = await pages[i].evaluate(() => document.title)
-                explodedTitle = pageTitle.split(' ')
-                if (explodedTitle.length && parseInt(explodedTitle[0])) {
-                    timeoutTime = parseInt(pageTitle.split(' ')[0]) + 3
-                    mainPage = pages[i]
+    return new Promise(async (resolve, reject) => {
+        try {
+            let running = true
+            let mainPage = page
+            let pages
+            let pageTitle
+            let explodedTitle
+            let timeoutTime = 60
+            const startButtonSelector = '.pulse.animated, .open.btn.green'
+            while (running) {
+                debugMode && console.log('Clicking start...')
+                await mainPage.waitForSelector(startButtonSelector)
+                await mainPage.click(startButtonSelector)
+                debugMode && console.log('Clicked ! Watching ad...')
+                await timeout(3000)
+                pages = await browser.pages()
+                for (let i = 0; i < pages.length; i += 1) {
+                    pageTitle = await pages[i].evaluate(() => document.title)
+                    explodedTitle = pageTitle.split(' ')
+                    if (explodedTitle.length && parseInt(explodedTitle[0])) {
+                        timeoutTime = parseInt(pageTitle.split(' ')[0]) + 3
+                        mainPage = pages[i]
+                    }
                 }
-            }
-            console.log('Watching for ' + timeoutTime + ' seconds...')
-            await timeout(timeoutTime * 1000)
-            debugMode && console.log('Watched !')
-            for (let i = 0; i < pages.length; i += 1) {
-                pageTitle = await pages[i].evaluate(() => document.title)
-                if (! (await pages[i].title()).includes('You earned ')) {
-                    await pages[i].close()
+                console.log('Watching for ' + timeoutTime + ' seconds...')
+                await timeout(timeoutTime * 1000)
+                debugMode && console.log('Watched !')
+                for (let i = 0; i < pages.length; i += 1) {
+                    pageTitle = await pages[i].evaluate(() => document.title)
+                    if (! (await pages[i].title()).includes('You earned ')) {
+                        await pages[i].close()
+                    }
                 }
-            }
-            module.exports.page = mainPage
+                module.exports.page = mainPage
 
-            await timeout(3000)
+                await timeout(3000)
+            }
+            resolve()
+        } catch (error) {
+            reject(error)
         }
-        resolve()
     })
 }
 
