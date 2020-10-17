@@ -39,7 +39,7 @@ async function startFarming(debugMode = false) {
             ]
         })
         
-        ! debugMode && args.push('--window-position=0,-600')
+        ! debugMode && args.push('--window-position=0,-800')
         debugMode && console.log('Launched')
         const page = await browser.newPage()
         await page.goto('https://adbtc.top/index/enter')
@@ -107,22 +107,34 @@ async function watchAds(browser, page, debugMode) {
         let running = true
         let mainPage = page
         let pages
+        let pageTitle
+        let explodedTitle
+        let timeoutTime = 60
         const startButtonSelector = '.pulse.animated'
         while (running) {
             debugMode && console.log('Clicking start...')
-            await page.waitForSelector(startButtonSelector)
-            await page.click(startButtonSelector)
+            await mainPage.waitForSelector(startButtonSelector)
+            await mainPage.click(startButtonSelector)
             debugMode && console.log('Clicked ! Watching ad...')
-            await timeout(30000)
-            pages = await browser.pages() 
+            await timeout(3000)
+            pages = await browser.pages()
             for (let i = 0; i < pages.length; i += 1) {
-                if (! (await pages[i].title()).includes('You earned ')) {
-                    await pages[i].close()
-                } else {
+                pageTitle = await pages[i].evaluate(() => document.title)
+                explodedTitle = pageTitle.split(' ')
+                if (explodedTitle.length && parseInt(explodedTitle[0])) {
+                    timeoutTime = parseInt(pageTitle.split(' ')[0]) + 3
                     mainPage = pages[i]
                 }
             }
+            console.log('Watching for ' + timeoutTime + ' seconds...')
+            await timeout(timeoutTime * 1000)
             debugMode && console.log('Watched !')
+            for (let i = 0; i < pages.length; i += 1) {
+                pageTitle = await pages[i].evaluate(() => document.title)
+                if (! (await pages[i].title()).includes('You earned ')) {
+                    await pages[i].close()
+                }
+            }
             module.exports.page = mainPage
         }
         resolve()
