@@ -142,7 +142,7 @@ async function watchAds(browser, page, debugMode) {
                 debugMode && console.log('Watched !')
                 for (let i = 0; i < pages.length; i += 1) {
                     pageTitle = await pages[i].evaluate(() => document.title)
-                    if (! (await pages[i].title()).includes('You earned ')) {
+                    if (! pageTitle.includes('You earned ') && ! pageTitle.includes('Get Bitcoin for viewing websites')) {
                         await pages[i].close()
                     }
                 }
