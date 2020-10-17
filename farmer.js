@@ -92,7 +92,7 @@ async function startFarming(debugMode = false) {
         await watchAds(browser, page, debugMode)
 
         browser.close()
-        
+
         resolve()
     })
 }
@@ -105,20 +105,25 @@ async function startFarming(debugMode = false) {
 async function watchAds(browser, page, debugMode) {
     return new Promise(async (resolve) => {
         let running = true
+        let mainPage = page
+        let pages
+        const startButtonSelector = '.pulse.animated'
         while (running) {
             debugMode && console.log('Clicking start...')
-            const startButtonSelector = '.pulse.animated'
             await page.waitForSelector(startButtonSelector)
             await page.click(startButtonSelector)
             debugMode && console.log('Clicked ! Watching ad...')
             await timeout(30000)
-            const pages = await browser.pages()
+            pages = await browser.pages() 
             for (let i = 0; i < pages.length; i += 1) {
-                if (! await pages[i].title() === 'Get Bitcoin for viewing websites') {
+                if (! (await pages[i].title()).includes('You earned ')) {
                     await pages[i].close()
+                } else {
+                    mainPage = pages[i]
                 }
             }
             debugMode && console.log('Watched !')
+            module.exports.page = mainPage
         }
         resolve()
     })
