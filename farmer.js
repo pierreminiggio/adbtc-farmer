@@ -1,4 +1,6 @@
-const puppeteer = require('puppeteer')
+const puppeteer = require('puppeteer-extra')
+const stealthPlugin = require('puppeteer-extra-plugin-stealth')
+puppeteer.use(stealthPlugin())
 
 /**
  * @param {boolean} debugMode
