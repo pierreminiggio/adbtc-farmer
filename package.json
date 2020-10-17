@@ -17,7 +17,8 @@
     "node": "^12.6.0",
     "puppeteer": "^1.18.1",
     "puppeteer-extra": "^3.1.15",
-    "puppeteer-extra-plugin-stealth": "^2.6.2"
+    "puppeteer-extra-plugin-stealth": "^2.6.2",
+    "puppeteer-recaptcha-solver": "github:danielgatis/puppeteer-recaptcha-solver"
   },
   "devDependencies": {},
   "scripts": {
