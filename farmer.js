@@ -89,6 +89,8 @@ async function startFarming(debugMode = false) {
 
         debugMode && console.log('Solved ! Start watching ads...')
 
+        await timeout(3000)
+
         await watchAds(browser, page, debugMode)
 
         browser.close()
@@ -136,6 +138,8 @@ async function watchAds(browser, page, debugMode) {
                 }
             }
             module.exports.page = mainPage
+
+            await timeout(3000)
         }
         resolve()
     })
