@@ -123,6 +123,7 @@ async function watchAds(browser, page, debugMode) {
             let timeoutTime = 30
             const startButtonSelector = '.pulse.animated, .open.btn.green'
             while (running) {
+                debugMode && console.log(new Date())
                 debugMode && console.log('Clicking start...')
                 await mainPage.waitForSelector(startButtonSelector)
                 await mainPage.click(startButtonSelector)
