@@ -79,9 +79,7 @@ async function startFarming(debugMode = false) {
             await page.click(submitButton)
 
             debugMode && console.log('Logged in ! Going to ads watching page...')
-            const adWatcherMenuItemSelector = '.collection.menu:nth-of-type(3)>a:nth-of-type(3)'
-            await page.waitForSelector(adWatcherMenuItemSelector)
-            await page.click(adWatcherMenuItemSelector)
+            await goToAdsWatchingPage(page)
 
             debugMode && console.log('Went ! Waiting for captcha...')
             const reCaptchaIFrameSelector2 = reCaptchaIFrameSelector
@@ -109,6 +107,24 @@ async function startFarming(debugMode = false) {
 }
 
 /**
+ * @param {import('puppeteer').Page} page 
+ * 
+ * @returns {Promise}
+ */
+async function goToAdsWatchingPage(page) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const adWatcherMenuItemSelector = '.collection.menu:nth-of-type(3)>a:nth-of-type(3)'
+            await page.waitForSelector(adWatcherMenuItemSelector)
+            await page.click(adWatcherMenuItemSelector)
+            resolve()
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
  * @param {import('puppeteer').Browser} browser 
  * @param {import('puppeteer').Page} page 
  * @param {boolean} debugMode
@@ -124,6 +140,19 @@ async function watchAds(browser, page, debugMode) {
             let timeoutTime = 30
             const startButtonSelector = '.pulse.animated, .open.btn.green'
             while (running) {
+
+                debugMode && console.log('Checking if all tabs are closed...')
+                if ((await browser.pages()).length === 0) {
+                    debugMode && console.log('None opened ! Opening one...')
+                    mainPage = await browser.newPage()
+                    debugMode && console.log('Opened ! Going to adbtc.top again...')
+                    await mainPage.goto('https://adbtc.top/index')
+                    debugMode && console.log('Went ! Going to ads watching page again...')
+                    await goToAdsWatchingPage(mainPage)
+                    debugMode && console.log('Went !')
+                } else {
+                    debugMode && console.log('One is open ! We can keep going !')
+                }
                 debugMode && console.log(new Date())
                 debugMode && console.log('Clicking start...')
                 await mainPage.waitForSelector(startButtonSelector)
