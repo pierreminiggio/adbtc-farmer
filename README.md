@@ -19,4 +19,4 @@ Running :
 ```console
 npm start
 ```
-Try at your own risk, in my experience the 2Captcha fee is greater than the crypto gain. So it might not be worth it.
+Try at your own risk, in my experience at the time I typed this code, the 2Captcha fee is greater than the crypto gain. So it might not be worth it.
